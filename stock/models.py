@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.forms import ValidationError
 
 class AdminUserManager(BaseUserManager):
     
@@ -34,21 +35,31 @@ class AdminUserManager(BaseUserManager):
         return self._create_user(username, password, **extra_fields)
 
 class Administrador(AbstractBaseUser, PermissionsMixin):
+    
     username = models.CharField(max_length=50, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)  
+    updated_at = models.DateTimeField(auto_now=True)     
     
-    
-
     objects = AdminUserManager()
-
+    
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
-
+    
+    class Meta:
+        verbose_name = 'Administrador'
+        verbose_name_plural = 'Administradores'
+    
     def __str__(self):
         return self.username
-
-
+    
+    def clean(self):
+        
+        super().clean()
+        if self.username and len(self.username) < 3:  
+            raise ValidationError('El nombre de usuario debe tener al menos 3 caracteres')
+        
 # Modelo Productos
 class StockItem(models.Model):
     nombre = models.CharField(max_length=100)
