@@ -337,3 +337,75 @@ class Movimiento(models.Model):
             if self.stock_service.process_movement(self):
                 self.procesado = True
                 super().save(update_fields=['procesado'])
+                
+                
+class StockReportService:
+    """Servicio para generar reportes de stock"""
+    
+    @staticmethod
+    def productos_stock_bajo():
+        """Obtiene productos con stock bajo"""
+        return StockItem.objects.filter(
+            cantidad__lte=models.F('stock_minimo'),
+            activo=True
+        )
+    
+    @staticmethod
+    def valor_total_inventario():
+        """Calcula el valor total del inventario"""
+        productos = StockItem.objects.filter(activo=True)
+        return sum(p.valor_total_stock() for p in productos)
+    
+    @staticmethod
+    def movimientos_por_producto(producto_id: int):
+        """Obtiene historial de movimientos de un producto"""
+        return Movimiento.objects.filter(
+            producto_id=producto_id
+        ).select_related('producto', 'created_by')
+
+class NotificationService:
+    def __init__(self):
+        self.logger = logging.getLogger(__name__)
+    
+    def notify_low_stock(self, producto: StockItem):
+        
+        self.logger.warning(
+            f"Stock bajo detectado: {producto.nombre} "
+            f"(Actual: {producto.cantidad}, Mínimo: {producto.stock_minimo})"
+        )
+    
+    def notify_movement_processed(self, movement: Movimiento):
+        
+        self.logger.info(f"Movimiento procesado exitosamente: {movement}")
+
+class StockItemQuerySet(models.QuerySet):
+    
+    
+    def activos(self):
+        return self.filter(activo=True)
+    
+    def con_stock_bajo(self):
+        return self.filter(cantidad__lte=models.F('stock_minimo'))
+    
+    def sin_stock(self):
+        return self.filter(cantidad=0)
+    
+    def por_categoria_precio(self, precio_min=None, precio_max=None):
+        queryset = self
+        if precio_min:
+            queryset = queryset.filter(precio__gte=precio_min)
+        if precio_max:
+            queryset = queryset.filter(precio__lte=precio_max)
+        return queryset
+
+class StockItemManager(models.Manager):
+    
+    
+    def get_queryset(self):
+        return StockItemQuerySet(self.model, using=self._db)
+    
+    def activos(self):
+        return self.get_queryset().activos()
+    
+    def con_stock_bajo(self):
+        return self.get_queryset().con_stock_bajo()
