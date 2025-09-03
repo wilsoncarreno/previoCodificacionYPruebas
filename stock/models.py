@@ -15,20 +15,22 @@ class MovementProcessorProtocol(Protocol):
     
     def process(self, movement: 'Movimiento') -> bool:
         ...
-
+"""
 class BaseStockValidator(ABC):
     
     
     @abstractmethod
     def validate(self, item: 'StockItem', cantidad: int) -> bool:
         pass
-
+"""
+"""
 class PositiveStockValidator(BaseStockValidator):
     
     
     def validate(self, item: 'StockItem', cantidad: int) -> bool:
         return item.cantidad + cantidad >= 0
-
+"""
+"""
 class MinimumStockValidator(BaseStockValidator):
     
     
@@ -37,7 +39,8 @@ class MinimumStockValidator(BaseStockValidator):
     
     def validate(self, item: 'StockItem', cantidad: int) -> bool:
         return item.cantidad + cantidad >= self.minimum
-
+"""
+"""
 class MaximumStockValidator(BaseStockValidator):
     
     
@@ -46,7 +49,8 @@ class MaximumStockValidator(BaseStockValidator):
     
     def validate(self, item: 'StockItem', cantidad: int) -> bool:
         return item.cantidad + cantidad <= self.maximum
-
+"""
+"""
 class BaseMovementProcessor(ABC):
     
     
@@ -72,7 +76,8 @@ class BaseMovementProcessor(ABC):
         elif self._next_processor:
             return self._next_processor.process(movement)
         return False
-
+"""
+"""
 class EntradaProcessor(BaseMovementProcessor):
     
     
@@ -88,7 +93,8 @@ class EntradaProcessor(BaseMovementProcessor):
         except Exception as e:
             self.logger.error(f"Error procesando entrada: {e}")
             return False
-
+"""
+"""
 class SalidaProcessor(BaseMovementProcessor):
     
     
@@ -108,6 +114,8 @@ class SalidaProcessor(BaseMovementProcessor):
         except Exception as e:
             self.logger.error(f"Error procesando salida: {e}")
             return False
+"""
+"""
 class StockValidatorFactory:
         
     @staticmethod
@@ -123,7 +131,8 @@ class StockValidatorFactory:
         
         validator_class = validators[validator_type]
         return validator_class() if callable(validator_class) else validator_class
-
+"""
+"""
 class StockService:
     
     
@@ -164,7 +173,8 @@ class StockService:
             return False
         
         return self.entrada_processor.process(movement)
-
+        """
+"""""
 class AdminUserManager(BaseUserManager):
     
     def _create_user(self, username: str, password: str = None, **extra_fields):
@@ -196,7 +206,8 @@ class AdminUserManager(BaseUserManager):
             raise ValueError('Superuser debe tener is_superuser=True.')
         
         return self._create_user(username, password, **extra_fields)
-
+"""
+"""""
 class Administrador(AbstractBaseUser, PermissionsMixin):
     
     username = models.CharField(max_length=50, unique=True)
@@ -222,7 +233,8 @@ class Administrador(AbstractBaseUser, PermissionsMixin):
         super().clean()
         if self.username and len(self.username) < 3:
             raise ValidationError('El nombre de usuario debe tener al menos 3 caracteres')
-        
+        """
+"""""
 class StockItem(models.Model):
     
     
@@ -267,7 +279,7 @@ class StockItem(models.Model):
     def valor_total_stock(self) -> Decimal:
         
         return Decimal(str(self.cantidad)) * self.precio
-    
+
 class Movimiento(models.Model):
     
     TIPO_CHOICES = [
@@ -338,13 +350,14 @@ class Movimiento(models.Model):
                 self.procesado = True
                 super().save(update_fields=['procesado'])
                 
-                
+"""
+
+"""
 class StockReportService:
-    """Servicio para generar reportes de stock"""
+    
     
     @staticmethod
     def productos_stock_bajo():
-        """Obtiene productos con stock bajo"""
         return StockItem.objects.filter(
             cantidad__lte=models.F('stock_minimo'),
             activo=True
@@ -352,17 +365,17 @@ class StockReportService:
     
     @staticmethod
     def valor_total_inventario():
-        """Calcula el valor total del inventario"""
+    
         productos = StockItem.objects.filter(activo=True)
         return sum(p.valor_total_stock() for p in productos)
     
     @staticmethod
     def movimientos_por_producto(producto_id: int):
-        """Obtiene historial de movimientos de un producto"""
         return Movimiento.objects.filter(
             producto_id=producto_id
         ).select_related('producto', 'created_by')
-
+"""
+"""
 class NotificationService:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -378,6 +391,9 @@ class NotificationService:
         
         self.logger.info(f"Movimiento procesado exitosamente: {movement}")
 
+
+"""
+"""
 class StockItemQuerySet(models.QuerySet):
     
     
@@ -409,3 +425,4 @@ class StockItemManager(models.Manager):
     
     def con_stock_bajo(self):
         return self.get_queryset().con_stock_bajo()
+        """
