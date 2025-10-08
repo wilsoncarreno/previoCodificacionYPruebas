@@ -69,4 +69,4 @@ This system is a complete **inventory management solution** that:
 - Provides a detailed log of stock movements.  
 - Includes a user management module with multiple permission levels.  
 - Exposes APIs that make it easy to integrate with modern frontend applications.  
-https://drive.google.com/file/d/15Sl8363D1pbUuQIQ2Fl15rYZ5tGAQGfS/view?usp=sharing 
+https://drive.google.com/drive/folders/15MVA84tyt1_suv2GhH02dcN1wK-6k1PG?usp=sharing
