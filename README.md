@@ -4,7 +4,6 @@
 ![Django](https://img.shields.io/badge/Django-5.2.1-green.svg)
 ![DRF](https://img.shields.io/badge/DRF-3.15.2-red.svg)
 ![Test Coverage](https://img.shields.io/badge/Coverage-85%25-brightgreen.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 A professional *Inventory Management System* built with *Django REST Framework* following *Clean Architecture* principles and *SOLID* design patterns. This system provides a complete solution for managing products, tracking stock movements, and handling administrator users with role-based permissions.
 
@@ -31,13 +30,10 @@ A professional *Inventory Management System* built with *Django REST Framework* 
 - [Architecture](#-architecture)
 - [Installation](#-installation)
 - [Configuration](#-configuration)
-- [API Endpoints](#-api-endpoints)
 - [Testing](#-testing)
 - [Project Structure](#-project-structure)
 - [Usage Examples](#-usage-examples)
 - [Design Patterns](#-design-patterns)
-- [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
@@ -547,18 +543,8 @@ CACHES = {
 
 
 ---
-
-## 🚀 Deployment
-
-### Using Gunicorn (Production)
-
-bash
-# Install gunicorn (already in requirements.txt)
-pip install gunicorn
-
-# Run with workers
-gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --workers 4
-
+# Link informe
 
 https://drive.google.com/drive/folders/15MVA84tyt1_suv2GhH02dcN1wK-6k1PG?usp=sharing
+
 
