@@ -18,6 +18,34 @@ class StockViewSet(viewsets.ModelViewSet):
     serializer_class = StockSerializer
     permission_classes = [AllowAny]
 
+    def perform_create(self, serializer):
+        item = serializer.save()
+        if item.cantidad and item.cantidad != 0:
+            Movimiento.objects.create(producto=item, tipo='entrada', cantidad=item.cantidad)
+
+    def perform_update(self, serializer):
+        item = self.get_object()
+        old_cantidad = item.cantidad
+        old_precio = item.precio
+        updated_item = serializer.save()
+
+        # Registrar cambio de cantidad
+        delta = updated_item.cantidad - old_cantidad
+        if delta != 0:
+            Movimiento.objects.create(
+                producto=updated_item,
+                tipo='entrada' if delta > 0 else 'salida',
+                cantidad=abs(delta)
+            )
+
+        # Registrar cambio de precio
+        if updated_item.precio != old_precio:
+            Movimiento.objects.create(
+                producto=updated_item,
+                tipo='ajuste',
+                cantidad=0
+            )
+
     @action(detail=True, methods=['put'], url_path='subtract')
     def subtract_stock(self, request, pk=None):
         """

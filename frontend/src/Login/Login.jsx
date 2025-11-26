@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "../../hooks/useAuth" // ✅ Usar el hook
+import { useAuth } from "../hooks/useAuth" // ✅ Usar el hook
 import "./Login.css"
 
 export default function Login({ onLoginSuccess }) {

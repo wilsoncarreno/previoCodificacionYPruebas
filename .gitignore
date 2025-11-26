@@ -1,29 +1,138 @@
-# --- Python / Django ---
-backend/venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.sqlite3
-
-# Archivos de entorno
-.env
-*.env
-
-# --- Node / React ---
-frontend/node_modules/
-node_modules/
-frontend/build/
-frontend/dist/
-frontend/.next/
-frontend/out/
+# ===============================
+#           GENERAL
+# ===============================
+# SO / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Archivos del sistema
-.DS_Store
-Thumbs.db
+# Archivos sensibles (claves/certificados)
+*.pem
+*.key
+*.crt
+*.p12
+
+# ===============================
+#        PYTHON / DJANGO
+# ===============================
+# Entornos virtuales
+venv/
+.venv/
+env/
+ENV/
+.ENV/
+__pypackages__/
+.python-version
+
+# Cachés/artefactos
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+dist/
+build/
+wheels/
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+
+# Testing / herramientas
+.tox/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Base de datos local
+db.sqlite3
+*.sqlite3
+
+# Archivos/dirs de Django que se generan
+media/                # uploads de usuarios
+staticfiles/          # salida de collectstatic
+static_root/
+
+# Config locales opcionales
+local_settings.py
+settings_local.py
+
+# i18n compilados
+*.mo
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# ===============================
+#            ENTORNOS
+# ===============================
+# Archivos de entorno (no secretos de ejemplo)
+.env
+*.env
+.envrc
+# Mantener ejemplos/plantillas
+!.env.example
+!.env.sample
+!.env.template
+!.env.*.example
+!.env.*.sample
+
+# Next.js y frameworks: variantes locales
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ===============================
+#       NODE / REACT / NEXT
+# ===============================
+# Dependencias y artefactos
+node_modules/
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/out/
+
+# Caches y herramientas
+.cache/
+.parcel-cache/
+.eslintcache
+.turbo/
+coverage/
+storybook-static/
+*.tsbuildinfo
+
+# Otros frameworks que puedas usar en el front
+.next/
+.nuxt/
+.svelte-kit/
+.vite/
+
+# npm (si guarda tokens, mejor ignorarlo)
+.npmrc
+.npm/
+
+# ===============================
+#          CONTENEDORES
+# ===============================
+.docker/
+docker-compose.override.yml
+
+# ===============================
+#            JUPYTER
+# ===============================
+.ipynb_checkpoints/

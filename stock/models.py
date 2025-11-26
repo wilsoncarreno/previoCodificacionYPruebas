@@ -49,6 +49,7 @@ class Movimiento(models.Model):
     Tipo_Choices = (
         ('entrada', 'Entrada'),
         ('salida', 'Salida'),
+        ('ajuste', 'Ajuste'),
     )
     producto = models.ForeignKey(StockItem, on_delete=models.CASCADE, related_name='movimientos')
     tipo = models.CharField(max_length=10, choices = Tipo_Choices)

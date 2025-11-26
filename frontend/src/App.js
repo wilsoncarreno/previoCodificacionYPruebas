@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Login from "./components/Login/Login.jsx"
+import Login from "./Login/Login.jsx" // usa la versión actual del login
 import Dashboard from "./components/DashBoard/Dash.jsx"
 import "./App.css"
 

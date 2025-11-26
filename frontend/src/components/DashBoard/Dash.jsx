@@ -1,7 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { fetchProducts, addProduct, restockProduct, subtractProduct, updateProduct, deleteProduct } from "../../services/stockService"
+import { fetchMovements } from "../../services/movementService"
 import "./Dash.css"
+
+const AUTO_REFRESH_MS = 10000
 
 // Componente del Sidebar
 function AppSidebar({ activeSection, setActiveSection, onLogout }) {
@@ -9,27 +13,27 @@ function AppSidebar({ activeSection, setActiveSection, onLogout }) {
     <div className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <span className="logo-icon">📦</span>
+          <span className="logo-icon">[]</span>
           <span className="logo-text">Stock Manager</span>
         </div>
       </div>
 
       <div className="sidebar-content">
         <div className="sidebar-group">
-          <div className="sidebar-group-label">Gestión</div>
+          <div className="sidebar-group-label">Gestion</div>
           <div className="sidebar-menu">
             <button
               className={`sidebar-menu-item ${activeSection === "stock" ? "active" : ""}`}
               onClick={() => setActiveSection("stock")}
             >
-              <span className="menu-icon">📦</span>
+              <span className="menu-icon">[]</span>
               <span>Stock Manager</span>
             </button>
             <button
               className={`sidebar-menu-item ${activeSection === "account" ? "active" : ""}`}
               onClick={() => setActiveSection("account")}
             >
-              <span className="menu-icon">👤</span>
+              <span className="menu-icon">@</span>
               <span>Mi Cuenta</span>
             </button>
           </div>
@@ -38,8 +42,8 @@ function AppSidebar({ activeSection, setActiveSection, onLogout }) {
 
       <div className="sidebar-footer">
         <button className="sidebar-menu-item logout-btn" onClick={onLogout}>
-          <span className="menu-icon">🚪</span>
-          <span>Cerrar Sesión</span>
+          <span className="menu-icon"></span>
+          <span>Cerrar Sesion</span>
         </button>
       </div>
     </div>
@@ -47,11 +51,11 @@ function AppSidebar({ activeSection, setActiveSection, onLogout }) {
 }
 
 // Componente para mostrar productos
-function ProductList({ products, onRefresh }) {
+function ProductList({ products, onRefresh, onEdit, onDelete }) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Productos Disponibles</h3>
+        <h3>Productos disponibles</h3>
         <p>Lista de todos los productos en stock</p>
       </div>
       <div className="card-content">
@@ -61,9 +65,10 @@ function ProductList({ products, onRefresh }) {
               <tr>
                 <th>ID</th>
                 <th>Nombre</th>
-                <th>Descripción</th>
+                <th>Descripcion</th>
                 <th>Precio</th>
                 <th>Cantidad</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -78,6 +83,14 @@ function ProductList({ products, onRefresh }) {
                       {product.cantidad}
                     </span>
                   </td>
+                  <td className="actions">
+                    <button className="icon-btn edit" onClick={() => onEdit(product)} title="Editar precio/cantidad">
+                      &#9998;
+                    </button>
+                    <button className="icon-btn delete" onClick={() => onDelete(product)} title="Eliminar producto">
+                      &#128465;
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -89,7 +102,7 @@ function ProductList({ products, onRefresh }) {
 }
 
 // Componente para agregar productos
-function AddProduct({ onProductAdded }) {
+function AddProduct({ onProductAdded, onNotify }) {
   const [formData, setFormData] = useState({
     id: "",
     nombre: "",
@@ -97,35 +110,22 @@ function AddProduct({ onProductAdded }) {
     precio: "",
     cantidad: "",
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     try {
-      const response = await fetch("http://localhost:8000/api/stock/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: formData.id,
-          nombre: formData.nombre,
-          descripcion: formData.descripcion,
-          precio: Number.parseFloat(formData.precio),
-          cantidad: Number.parseInt(formData.cantidad),
-        }),
-      })
-
-      if (response.ok) {
-        alert("Producto agregado exitosamente")
-        setFormData({ id: "", nombre: "", descripcion: "", precio: "", cantidad: "" })
-        onProductAdded()
-      } else {
-        throw new Error("Error al agregar producto")
-      }
+      setSubmitting(true)
+      await addProduct(formData)
+      onNotify?.("success", "Producto agregado exitosamente")
+      setFormData({ id: "", nombre: "", descripcion: "", precio: "", cantidad: "" })
+      onProductAdded()
     } catch (error) {
-      alert("No se pudo agregar el producto")
-      console.error(error)
+      onNotify?.("error", "No se pudo agregar el producto")
+      console.error("addProduct error", error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -136,8 +136,8 @@ function AddProduct({ onProductAdded }) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>➕ Agregar Producto</h3>
-        <p>Añadir un nuevo producto al inventario</p>
+        <h3>Agregar producto</h3>
+        <p>Anadir un nuevo producto al inventario</p>
       </div>
       <div className="card-content">
         <form onSubmit={handleSubmit} className="product-form">
@@ -165,7 +165,7 @@ function AddProduct({ onProductAdded }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="descripcion">Descripción</label>
+            <label htmlFor="descripcion">Descripcion</label>
             <input
               id="descripcion"
               type="text"
@@ -199,8 +199,8 @@ function AddProduct({ onProductAdded }) {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary full-width">
-            ➕ Agregar Producto
+          <button type="submit" className="btn btn-primary full-width" disabled={submitting}>
+            Agregar producto
           </button>
         </form>
       </div>
@@ -209,36 +209,27 @@ function AddProduct({ onProductAdded }) {
 }
 
 // Componente para reabastecer productos
-function RestockProduct({ onProductUpdated }) {
+function RestockProduct({ onProductUpdated, onNotify }) {
   const [formData, setFormData] = useState({
     id: "",
     cantidad: "",
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     try {
-      const response = await fetch(`http://localhost:8000/api/stock/${formData.id}/restock/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cantidad: Number.parseInt(formData.cantidad),
-        }),
-      })
-
-      if (response.ok) {
-        alert("Producto reabastecido exitosamente")
-        setFormData({ id: "", cantidad: "" })
-        onProductUpdated()
-      } else {
-        throw new Error("Error al reabastecer producto")
-      }
+      setSubmitting(true)
+      await restockProduct(formData)
+      onNotify?.("success", "Producto reabastecido exitosamente")
+      setFormData({ id: "", cantidad: "" })
+      onProductUpdated()
     } catch (error) {
-      alert("No se pudo reabastecer el producto")
-      console.error(error)
+      onNotify?.("error", "No se pudo reabastecer el producto")
+      console.error("restockProduct error", error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -249,7 +240,7 @@ function RestockProduct({ onProductUpdated }) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>📦 Reabastecer Producto</h3>
+        <h3>Reabastecer producto</h3>
         <p>Aumentar la cantidad de un producto existente</p>
       </div>
       <div className="card-content">
@@ -267,7 +258,7 @@ function RestockProduct({ onProductUpdated }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="restock-cantidad">Cantidad a Agregar</label>
+            <label htmlFor="restock-cantidad">Cantidad a agregar</label>
             <input
               id="restock-cantidad"
               type="number"
@@ -279,8 +270,8 @@ function RestockProduct({ onProductUpdated }) {
             />
           </div>
 
-          <button type="submit" className="btn btn-success full-width">
-            📦 Reabastecer Producto
+          <button type="submit" className="btn btn-success full-width" disabled={submitting}>
+            Reabastecer producto
           </button>
         </form>
       </div>
@@ -289,36 +280,27 @@ function RestockProduct({ onProductUpdated }) {
 }
 
 // Componente para descontar productos
-function SubtractProduct({ onProductUpdated }) {
+function SubtractProduct({ onProductUpdated, onNotify }) {
   const [formData, setFormData] = useState({
     id: "",
     cantidad: "",
   })
+  const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     try {
-      const response = await fetch(`http://localhost:8000/api/stock/${formData.id}/subtract/`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cantidad: Number.parseInt(formData.cantidad),
-        }),
-      })
-
-      if (response.ok) {
-        alert("Producto descontado exitosamente")
-        setFormData({ id: "", cantidad: "" })
-        onProductUpdated()
-      } else {
-        throw new Error("Error al descontar producto")
-      }
+      setSubmitting(true)
+      await subtractProduct(formData)
+      onNotify?.("success", "Producto descontado exitosamente")
+      setFormData({ id: "", cantidad: "" })
+      onProductUpdated()
     } catch (error) {
-      alert("No se pudo descontar el producto")
-      console.error(error)
+      onNotify?.("error", "No se pudo descontar el producto")
+      console.error("subtractProduct error", error)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -329,7 +311,7 @@ function SubtractProduct({ onProductUpdated }) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>➖ Descontar Producto</h3>
+        <h3>Descontar producto</h3>
         <p>Reducir la cantidad de un producto existente</p>
       </div>
       <div className="card-content">
@@ -347,7 +329,7 @@ function SubtractProduct({ onProductUpdated }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="subtract-cantidad">Cantidad a Descontar</label>
+            <label htmlFor="subtract-cantidad">Cantidad a descontar</label>
             <input
               id="subtract-cantidad"
               type="number"
@@ -359,8 +341,8 @@ function SubtractProduct({ onProductUpdated }) {
             />
           </div>
 
-          <button type="submit" className="btn btn-danger full-width">
-            ➖ Descontar Producto
+          <button type="submit" className="btn btn-danger full-width" disabled={submitting}>
+            Descontar producto
           </button>
         </form>
       </div>
@@ -370,11 +352,23 @@ function SubtractProduct({ onProductUpdated }) {
 
 // Componente para mostrar movimientos
 function MovementHistory({ movements }) {
+  const badgeClass = (tipo) => {
+    if (tipo === "entrada") return "badge-success"
+    if (tipo === "salida") return "badge-danger"
+    return "badge-neutral"
+  }
+
+  const tipoLabel = (tipo) => {
+    if (tipo === "entrada") return "Entrada"
+    if (tipo === "salida") return "Salida"
+    return "Ajuste"
+  }
+
   return (
     <div className="card">
       <div className="card-header">
-        <h3>📋 Historial de Movimientos</h3>
-        <p>Registro de entradas y salidas de productos</p>
+        <h3>Historial de movimientos</h3>
+        <p>Registro de entradas, salidas y ajustes de productos</p>
       </div>
       <div className="card-content">
         {movements.length === 0 ? (
@@ -384,10 +378,8 @@ function MovementHistory({ movements }) {
             <table className="movements-table">
               <thead>
                 <tr>
-                  <th>Tipo</th>
-                  <th>ID Producto</th>
                   <th>Nombre</th>
-                  <th>Descripción</th>
+                  <th>Descripcion</th>
                   <th>Precio</th>
                   <th>Cantidad</th>
                   <th>Fecha</th>
@@ -397,18 +389,13 @@ function MovementHistory({ movements }) {
               <tbody>
                 {movements.map((movement, index) => (
                   <tr key={movement.id || index} className={`movement-row ${movement.tipo}`}>
-                    <td>
-                      <span className={`badge ${movement.tipo === "entrada" ? "badge-success" : "badge-danger"}`}>
-                        {movement.tipo === "entrada" ? "Entrada" : "Salida"}
-                      </span>
-                    </td>
-                    <td className="product-id">{movement.producto_id || "N/A"}</td>
+                    
                     <td className="product-name">{movement.nombre || "N/A"}</td>
                     <td>{movement.descripcion || "N/A"}</td>
                     <td>${Number(movement.precio || 0).toFixed(2)}</td>
                     <td>{movement.cantidad || 0}</td>
-                    <td>📅 {movement.fecha || "N/A"}</td>
-                    <td>🕐 {movement.hora || "N/A"}</td>
+                    <td>{movement.fecha || "N/A"}</td>
+                    <td>{movement.hora || "N/A"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -419,8 +406,7 @@ function MovementHistory({ movements }) {
     </div>
   )
 }
-
-// Componente de pestañas
+// Componente de pestanas
 function Tabs({ activeTab, setActiveTab, children }) {
   return (
     <div className="tabs-container">
@@ -433,18 +419,6 @@ function Tabs({ activeTab, setActiveTab, children }) {
         </button>
         <button className={`tab-button ${activeTab === "add" ? "active" : ""}`} onClick={() => setActiveTab("add")}>
           Agregar
-        </button>
-        <button
-          className={`tab-button ${activeTab === "restock" ? "active" : ""}`}
-          onClick={() => setActiveTab("restock")}
-        >
-          Reabastecer
-        </button>
-        <button
-          className={`tab-button ${activeTab === "subtract" ? "active" : ""}`}
-          onClick={() => setActiveTab("subtract")}
-        >
-          Descontar
         </button>
         <button
           className={`tab-button ${activeTab === "movements" ? "active" : ""}`}
@@ -465,68 +439,84 @@ export default function Dashboard({ onLogout }) {
   const [products, setProducts] = useState([])
   const [movements, setMovements] = useState([])
   const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState(null)
+  const [editingProduct, setEditingProduct] = useState(null)
+  const [editForm, setEditForm] = useState({ precio: "", cantidad: "" })
 
-  // Función para cargar productos
+  const notify = (type, message) => setStatus({ type, message })
+
+  useEffect(() => {
+    if (!status) return
+    const timer = setTimeout(() => setStatus(null), 4000)
+    return () => clearTimeout(timer)
+  }, [status])
+
+  const openEditModal = (product) => {
+    setEditingProduct(product)
+    setEditForm({
+      precio: product.precio ?? "",
+      cantidad: product.cantidad ?? "",
+    })
+  }
+
+  const closeEditModal = () => {
+    setEditingProduct(null)
+    setEditForm({ precio: "", cantidad: "" })
+  }
+
+  const handleEditChange = (field, value) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault()
+    if (!editingProduct) return
+    try {
+      await updateProduct({
+        id: editingProduct.id,
+        precio: editForm.precio,
+        cantidad: editForm.cantidad,
+      })
+      notify("success", "Producto actualizado")
+      closeEditModal()
+      refreshData()
+    } catch (err) {
+      console.error("updateProduct error", err)
+      notify("error", "No se pudo actualizar el producto")
+    }
+  }
+
+  const handleDelete = async (product) => {
+    const ok = window.confirm(`Eliminar producto ${product.nombre}?`)
+    if (!ok) return
+    try {
+      await deleteProduct(product.id)
+      notify("success", "Producto eliminado")
+      refreshData()
+    } catch (err) {
+      console.error("deleteProduct error", err)
+      notify("error", "No se pudo eliminar el producto")
+    }
+  }
+
+  // Funcion para cargar productos
   const loadProducts = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/stock/")
-      if (response.ok) {
-        const data = await response.json()
-        // Convertir precio y cantidad a números
-        const processedData = data
-          .map((product) => ({
-            ...product,
-            precio: Number(product.precio) || 0,
-            cantidad: Number(product.cantidad) || 0,
-          }))
-          .reverse() // Agregar esta línea para mostrar los últimos primero
-        setProducts(processedData)
-      }
+      const data = await fetchProducts()
+      setProducts(data)
     } catch (error) {
       console.error("Error loading products:", error)
     }
   }
 
-  // Función para cargar movimientos (real)
+  // Funcion para cargar movimientos (real)
   const loadMovements = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/movimientos/")
-      if (response.ok) {
-        const data = await response.json()
-        console.log("Datos de movimientos recibidos:", data) // Para debug
-
-        // Procesar los datos para asegurar que tengan el formato correcto
-        const processedMovements = data
-          .map((movement) => {
-            console.log("Procesando movimiento:", movement) // Para debug
-            return {
-              id: movement.id || movement.movimiento_id || "N/A",
-              producto_id: movement.producto_id || movement.product_id || movement.id_producto || "N/A",
-              nombre: movement.nombre || movement.product_name || movement.producto_nombre || "N/A",
-              descripcion: movement.descripcion || movement.description || movement.producto_descripcion || "N/A",
-              precio: Number(movement.precio || movement.price || movement.producto_precio || 0),
-              cantidad: Number(movement.cantidad || movement.quantity || movement.qty || 0),
-              tipo: movement.tipo || movement.type || movement.movement_type || "entrada",
-              fecha: movement.fecha || movement.date || movement.created_date || "N/A",
-              hora: movement.hora || movement.time || movement.created_time || "N/A",
-            }
-          })
-          // Ordenar por fecha y hora más recientes primero
-          .sort((a, b) => {
-            // Crear objetos Date para comparar
-            const dateA = new Date(`${a.fecha} ${a.hora}`)
-            const dateB = new Date(`${b.fecha} ${b.hora}`)
-            return dateB - dateA // Orden descendente (más reciente primero)
-          })
-
-        console.log("Movimientos procesados:", processedMovements) // Para debug
-        setMovements(processedMovements)
-      } else {
-        console.error("Error al cargar movimientos:", response.status)
-      }
+      const processedMovements = await fetchMovements()
+      setMovements(processedMovements)
     } catch (error) {
       console.error("Error loading movements:", error)
-      // En caso de error, mantener un array vacío
+      // En caso de error, mantener un array vacio
       setMovements([])
     }
   }
@@ -546,10 +536,17 @@ export default function Dashboard({ onLogout }) {
     loadMovements()
   }
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshData()
+    }, AUTO_REFRESH_MS)
+    return () => clearInterval(interval)
+  }, [])
+
   if (loading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner">📦</div>
+        <div className="loading-spinner">[]</div>
         <p>Cargando dashboard...</p>
       </div>
     )
@@ -560,17 +557,67 @@ export default function Dashboard({ onLogout }) {
       <AppSidebar activeSection={activeSection} setActiveSection={setActiveSection} onLogout={onLogout} />
 
       <div className="main-content">
+        {status && <div className={`status-banner ${status.type}`}>{status.message}</div>}
+
+        {editingProduct && (
+          <div className="modal-backdrop">
+            <div className="modal-card">
+              <div className="modal-header">
+                <h3>Editar producto</h3>
+                <button className="icon-btn close" onClick={closeEditModal} title="Cerrar">
+                  x
+                </button>
+              </div>
+              <form className="modal-body" onSubmit={handleEditSubmit}>
+                <label>
+                  Precio
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.precio}
+                    onChange={(e) => handleEditChange("precio", e.target.value)}
+                  />
+                </label>
+                <label>
+                  Cantidad
+                  <input
+                    type="number"
+                    value={editForm.cantidad}
+                    onChange={(e) => handleEditChange("cantidad", e.target.value)}
+                  />
+                </label>
+                <div className="modal-actions">
+                  <button type="button" className="btn secondary" onClick={closeEditModal}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn primary">
+                    Guardar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         <header className="dashboard-header">
-          <h1>{activeSection === "stock" ? "Gestión de Stock" : "Mi Cuenta"}</h1>
+          <div className="header-left">
+            <h1>{activeSection === "stock" ? "Gestion de Stock" : "Mi Cuenta"}</h1>
+            <span className="auto-refresh-note">Actualiza automaticamente cada 10s</span>
+          </div>
         </header>
 
         <main className="dashboard-main">
           {activeSection === "stock" && (
             <Tabs activeTab={activeTab} setActiveTab={setActiveTab}>
-              {activeTab === "products" && <ProductList products={products} onRefresh={refreshData} />}
-              {activeTab === "add" && <AddProduct onProductAdded={refreshData} />}
-              {activeTab === "restock" && <RestockProduct onProductUpdated={refreshData} />}
-              {activeTab === "subtract" && <SubtractProduct onProductUpdated={refreshData} />}
+              {activeTab === "products" && (
+                <ProductList
+                  products={products}
+                  onRefresh={refreshData}
+                  onEdit={openEditModal}
+                  onDelete={handleDelete}
+                />
+              )}
+              {activeTab === "add" && <AddProduct onProductAdded={refreshData} onNotify={notify} />}
               {activeTab === "movements" && <MovementHistory movements={movements} />}
             </Tabs>
           )}
@@ -579,10 +626,10 @@ export default function Dashboard({ onLogout }) {
             <div className="card">
               <div className="card-header">
                 <h3>Mi Cuenta</h3>
-                <p>Información de la cuenta de usuario</p>
+                <p>Informacion de la cuenta de usuario</p>
               </div>
               <div className="card-content">
-                <p>Aquí puedes gestionar la información de tu cuenta.</p>
+                <p>Aqui puedes gestionar la informacion de tu cuenta.</p>
               </div>
             </div>
           )}

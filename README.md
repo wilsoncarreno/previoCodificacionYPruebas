@@ -23,6 +23,14 @@ A professional *Inventory Management System* built with *Django REST Framework* 
 
 ---
 
+## Cambios recientes (frontend)
+- Centralizadas las llamadas del dashboard en servicios Axios (`frontend/src/services/stockService.js` y `frontend/src/services/movementService.js`) reutilizando el cliente con interceptores.
+- Nueva configuracion de `API_BASE` en `frontend/src/config/env.js` (usa `REACT_APP_API_URL`/`API_BASE_URL` si existen, o `http://127.0.0.1:8000` por defecto).
+- Dashboard ahora usa refresco automatico cada 10s y notificaciones en pantalla para altas/ajustes de stock.
+- Edicion/eliminacion desde la tabla de productos con modal para precio/cantidad y confirmacion de borrado.
+
+---
+
 ## 📋 Table of Contents
 
 - [Features](#-features)
