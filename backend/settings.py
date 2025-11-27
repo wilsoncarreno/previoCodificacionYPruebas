@@ -6,21 +6,24 @@ ENDPOINTS PÚBLICOS - Permite acceso desde cualquier frontend
 
 from pathlib import Path
 import os
-from decouple import config, Csv
+from decouple import config
 import pymysql
 
 pymysql.install_as_MySQLdb()
-...
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
 DEBUG = config('DEBUG', default=False, cast=bool)
-from decouple import config, Csv
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,previocodificacionypruebas-1-jfly.onrender.com', cast=Csv())
+# 👇 PON EXACTAMENTE ESTO y NADA MÁS de ALLOWED_HOSTS en TODO el archivo
+ALLOWED_HOSTS = [
+    "previocodificacionypruebas-1-jfly.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 print(">>> ALLOWED_HOSTS EN RUNTIME:", ALLOWED_HOSTS)
-
-
 # ==============================================================================
 # APPLICATION DEFINITION
 # ==============================================================================
