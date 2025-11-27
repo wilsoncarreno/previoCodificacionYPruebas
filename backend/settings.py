@@ -21,13 +21,21 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUC
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 # ⚠️ USAR SOLO ESTO PARA ALLOWED_HOSTS (NO OTRA COSA MÁS EN TODO EL ARCHIVO)
-ALLOWED_HOSTS = [
-    "previocodificacionypruebas-1-jfly.onrender.com",
-    "localhost",
-    "127.0.0.1",
-]
+# Hosts base (local)
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+
+# Host de Render, si existe
+render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if render_host:
+    ALLOWED_HOSTS.append(render_host)
+
+# Host público de Railway, si existe
+railway_host = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+if railway_host:
+    ALLOWED_HOSTS.append(railway_host)
 
 print(">>> ALLOWED_HOSTS EN RUNTIME:", ALLOWED_HOSTS)
+
 
 # ==============================================================================
 # APPLICATION DEFINITION
