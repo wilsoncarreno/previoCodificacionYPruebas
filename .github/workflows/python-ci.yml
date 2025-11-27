@@ -1,0 +1,64 @@
+name: Python CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install security & lint tools
+        run: |
+          pip install pip-audit bandit flake8
+
+      - name: Run pip-audit (dependency vulnerability scan)
+        run: |
+          pip-audit --progress-spinner off --fail-on vuln
+
+      - name: Run Bandit (static security analysis)
+        run: |
+          bandit -r backend -lll -ii
+
+      - name: Run flake8 (code inconsistencies / style)
+        run: |
+          flake8 backend tests || true
+
+      - name: Run tests with pytest
+        env:
+          DJANGO_SETTINGS_MODULE: backend.settings
+        run: |
+          pytest -q --maxfail=1 --disable-warnings
+
+      - name: Upload pytest cache
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-cache
+          path: .pytest_cache
