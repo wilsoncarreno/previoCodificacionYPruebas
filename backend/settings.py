@@ -6,28 +6,29 @@ ENDPOINTS PÚBLICOS - Permite acceso desde cualquier frontend
 
 from pathlib import Path
 import os
-from decouple import config, Csv
+from decouple import config
 import pymysql
 
 pymysql.install_as_MySQLdb()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# ======================================================================
+# SECURITY SETTINGS
+# ======================================================================
+
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# Obtener ALLOWED_HOSTS desde la variable de entorno `ALLOWED_HOSTS`
-# Permite configurar dominios en Render sin editar el archivo.
-ALLOWED_HOSTS = config(
-    'ALLOWED_HOSTS',
-    # Añadimos '*' como fallback temporal para evitar DisallowedHost en entornos
-    # donde la variable no está correctamente propagada (p. ej. Render).
-    # Revisar y restringir antes de usar en producción.
-    default='previocodificacionypruebas-1-jfly.onrender.com,localhost,127.0.0.1,*',
-    cast=Csv()
-)
+# ⚠️ USAR SOLO ESTO PARA ALLOWED_HOSTS (NO OTRA COSA MÁS EN TODO EL ARCHIVO)
+ALLOWED_HOSTS = [
+    "previocodificacionypruebas-1-jfly.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
 
 print(">>> ALLOWED_HOSTS EN RUNTIME:", ALLOWED_HOSTS)
+
 # ==============================================================================
 # APPLICATION DEFINITION
 # ==============================================================================
