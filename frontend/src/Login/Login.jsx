@@ -16,7 +16,7 @@ export default function Login({ onLoginSuccess }) {
   const [localError, setLocalError] = useState("")
   const [success, setSuccess] = useState("")
 
-  // Validación de campos
+  // Validacion de campos
   const validateFields = () => {
     const errors = { username: "", password: "" }
     let isValid = true
@@ -30,7 +30,7 @@ export default function Login({ onLoginSuccess }) {
     }
 
     if (!password.trim()) {
-      errors.password = "La contraseña es requerida"
+      errors.password = "La contrasena es requerida"
       isValid = false
     }
 

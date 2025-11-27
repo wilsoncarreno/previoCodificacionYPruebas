@@ -4,17 +4,24 @@ const normalizeProduct = (product) => ({
   ...product,
   precio: Number(product.precio) || 0,
   cantidad: Number(product.cantidad) || 0,
+  codigo: product.codigo || "",
 });
 
-export const fetchProducts = async () => {
-  const { data } = await api.get("/api/stock/");
+export const fetchProducts = async (params = {}) => {
+  const { data } = await api.get("/api/stock/", { params });
   const items = Array.isArray(data) ? data : data?.results || [];
-  return items.map(normalizeProduct).reverse();
+  const normalized = items.map(normalizeProduct).reverse();
+  const meta = {
+    count: data?.count ?? normalized.length,
+    next: data?.next ?? null,
+    previous: data?.previous ?? null,
+  };
+  return { items: normalized, meta };
 };
 
-export const addProduct = async ({ id, nombre, descripcion, precio, cantidad }) => {
+export const addProduct = async ({ codigo, nombre, descripcion, precio, cantidad }) => {
   const payload = {
-    id,
+    codigo,
     nombre,
     descripcion,
     precio: Number.parseFloat(precio),

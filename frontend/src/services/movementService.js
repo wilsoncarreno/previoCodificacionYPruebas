@@ -12,16 +12,22 @@ const normalizeMovement = (movement) => ({
   hora: movement.hora || movement.time || movement.created_time || "N/A",
 });
 
-export const fetchMovements = async () => {
-  const { data } = await api.get("/api/movimientos/");
+export const fetchMovements = async (params = {}) => {
+  const { data } = await api.get("/api/movimientos/", { params });
   const items = Array.isArray(data) ? data : data?.results || [];
-  return items
+  const normalized = items
     .map(normalizeMovement)
     .sort((a, b) => {
       const dateA = new Date(`${a.fecha} ${a.hora}`);
       const dateB = new Date(`${b.fecha} ${b.hora}`);
       return dateB - dateA;
     });
+  const meta = {
+    count: data?.count ?? normalized.length,
+    next: data?.next ?? null,
+    previous: data?.previous ?? null,
+  };
+  return { items: normalized, meta };
 };
 
 export default {
