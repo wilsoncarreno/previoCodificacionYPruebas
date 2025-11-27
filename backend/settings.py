@@ -16,7 +16,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUC
 DEBUG = config('DEBUG', default=False, cast=bool)
 from decouple import config, Csv
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,previocodificacionypruebas-1-jfly.onrender.com', cast=Csv())
 
 print(">>> ALLOWED_HOSTS EN RUNTIME:", ALLOWED_HOSTS)
 
