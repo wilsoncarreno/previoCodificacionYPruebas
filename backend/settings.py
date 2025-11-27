@@ -20,9 +20,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
 DEBUG = config('DEBUG', default=False, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
-if not DEBUG:
-    ALLOWED_HOSTS += [config('RENDER_EXTERNAL_HOSTNAME')]
+from decouple import config, Csv
+
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='localhost,127.0.0.1,*,previocodificacionypruebas-1-jfly.onrender.com',
+    cast=Csv()
+)
+
+
 
 # ==============================================================================
 # APPLICATION DEFINITION
