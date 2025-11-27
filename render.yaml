@@ -1,0 +1,75 @@
+services:
+  # Backend Django
+  - type: web
+    name: stock-manager-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --no-input
+      python manage.py migrate --no-input
+    startCommand: gunicorn backend.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stock-manager-db
+          property: connectionString
+      - key: DB_NAME
+        fromDatabase:
+          name: stock-manager-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: stock-manager-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: stock-manager-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: stock-manager-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: stock-manager-db
+          property: port
+
+  # Frontend React
+  - type: static
+    name: stock-manager-frontend
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: frontend
+    buildCommand: |
+      npm install
+      npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: REACT_APP_API_URL
+        value: https://stock-manager-backend.onrender.com
+
+databases:
+  - name: stock-manager-db
+    databaseName: stockmanagerdb
+    user: stockmanager
+    plan: free
