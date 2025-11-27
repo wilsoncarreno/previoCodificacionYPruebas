@@ -10,14 +10,7 @@ from decouple import config, Csv
 import pymysql
 
 pymysql.install_as_MySQLdb()
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# ==============================================================================
-# SECURITY SETTINGS
-# ==============================================================================
-
+...
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
 DEBUG = config('DEBUG', default=False, cast=bool)
 from decouple import config, Csv
@@ -27,6 +20,7 @@ ALLOWED_HOSTS = config(
     default='localhost,127.0.0.1,*,previocodificacionypruebas-1-jfly.onrender.com',
     cast=Csv()
 )
+
 
 
 
