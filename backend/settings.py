@@ -11,15 +11,14 @@ import pymysql
 
 pymysql.install_as_MySQLdb()
 ...
+BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
 DEBUG = config('DEBUG', default=False, cast=bool)
 from decouple import config, Csv
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "previocodificacionypruebas-1-jfly.onrender.com",
-]
+ALLOWED_HOSTS = ["*"]
+
+print(">>> ALLOWED_HOSTS EN RUNTIME:", ALLOWED_HOSTS)
 
 
 # ==============================================================================
