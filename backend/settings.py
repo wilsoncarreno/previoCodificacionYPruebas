@@ -6,7 +6,7 @@ ENDPOINTS PÚBLICOS - Permite acceso desde cualquier frontend
 
 from pathlib import Path
 import os
-from decouple import config
+from decouple import config, Csv
 import pymysql
 
 pymysql.install_as_MySQLdb()
@@ -16,12 +16,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-CHANGE-THIS-IN-PRODUCTION')
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-# 👇 PON EXACTAMENTE ESTO y NADA MÁS de ALLOWED_HOSTS en TODO el archivo
-ALLOWED_HOSTS = [
-    "previocodificacionypruebas-1-jfly.onrender.com",
-    "localhost",
-    "127.0.0.1",
-]
+# Obtener ALLOWED_HOSTS desde la variable de entorno `ALLOWED_HOSTS`
+# Permite configurar dominios en Render sin editar el archivo.
+ALLOWED_HOSTS = config(
+    'ALLOWED_HOSTS',
+    default='previocodificacionypruebas-1-jfly.onrender.com,localhost,127.0.0.1',
+    cast=Csv()
+)
 
 print(">>> ALLOWED_HOSTS EN RUNTIME:", ALLOWED_HOSTS)
 # ==============================================================================
@@ -94,6 +95,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # ← Debe estar primero
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -227,6 +229,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Usar WhiteNoise para servir estáticos en producción (simple y efectivo en Render)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ==============================================================================
 # DEFAULT PRIMARY KEY
