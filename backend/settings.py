@@ -20,7 +20,10 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 # Permite configurar dominios en Render sin editar el archivo.
 ALLOWED_HOSTS = config(
     'ALLOWED_HOSTS',
-    default='previocodificacionypruebas-1-jfly.onrender.com,localhost,127.0.0.1',
+    # Añadimos '*' como fallback temporal para evitar DisallowedHost en entornos
+    # donde la variable no está correctamente propagada (p. ej. Render).
+    # Revisar y restringir antes de usar en producción.
+    default='previocodificacionypruebas-1-jfly.onrender.com,localhost,127.0.0.1,*',
     cast=Csv()
 )
 
